@@ -7,181 +7,169 @@ const userController = require("../controllers/userController");
 const facilitySyncController = require("../controllers/facilitySyncController");
 const bookingController = require("../controllers/bookingController");
 
-router.get(
-  "/user/all",
-  userController.protectSuperadmin,
-  userController.getAllUser
-);
+router.get("/user/all", userController.protectAdmin, userController.getAllUser);
 router.get(
   "/user",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   userController.getUsersByKeywords
 );
-router.get("/", userController.protectSuperadmin, userController.getMe);
+router.get("/", userController.protectAdmin, userController.getMe);
 router.post(
   "/assignadmin/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   userController.updateStatusUserByIdForAdmin
 );
 router.put(
   "/assignadmin/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   userController.updateStatusUserByIdForAdmin
 );
 router.put(
   "/editpassword",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   userController.editPassword
 );
 router.put(
   "/",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   userController.updateUserByIdForUser
 );
 
 router.delete(
   "/user/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   userController.deleteUserByAdmin
 );
 
 router.get(
   "/accomodations",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   accomodationController.getAllAccomodation
 );
 router.get(
   "/accomodations/validinoutdate",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   accomodationController.getValidAccomodationByInOutDate
 );
 router.get(
   "/accomodations/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   accomodationController.getAccomodationById
 );
 router.post(
   "/accomodations/",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   accomodationController.createAccomodation
 );
 router.put(
   "/accomodations/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   accomodationController.updateAccomodationById
 );
 router.delete(
   "/accomodations/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   accomodationController.deleteAccomodationById
 );
 
-router.get(
-  "/rooms",
-  userController.protectSuperadmin,
-  roomController.getAllRooms
-);
+router.get("/rooms", userController.protectAdmin, roomController.getAllRooms);
 router.get(
   "/rooms/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   roomController.getRoomById
 );
-router.post(
-  "/rooms/",
-  userController.protectSuperadmin,
-  roomController.createRoom
-);
+router.post("/rooms/", userController.protectAdmin, roomController.createRoom);
 router.put(
   "/rooms/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   roomController.updateRoomById
 );
 router.delete(
   "/rooms/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   roomController.deleteRoomById
 );
 
 router.get(
   "/facilities",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilityController.getAllFacilities
 );
 router.get(
   "/facilities/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilityController.getFacilityById
 );
 router.post(
   "/facilities/",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilityController.createFacility
 );
 router.put(
   "/facilities/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilityController.updateFacilityById
 );
 router.delete(
   "/facilities/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilityController.deleteFacilityById
 );
 
 // router.get(
 //   "/assignfacilities/",
-//   userController.protectSuperadmin,
+//   userController.protectAdmin,
 //   facilitySyncController.getAllFacilitySync
 // );
 router.get(
   "/assignfacilities/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilitySyncController.getFacilitySyncById
 );
 router.post(
   "/assignfacilities/",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilitySyncController.createFacilitySync
 );
 router.put(
   "/assignfacilities/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilitySyncController.updateFacilitySyncById
 );
 router.delete(
   "/assignfacilities/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   facilitySyncController.deleteFacilitySyncById
 );
 
 router.get(
   "/booking/",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   bookingController.getAllBooking
 );
 router.get(
   "/booking/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   bookingController.getBookingById
 );
 router.post(
   "/booking/",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   bookingController.createBooking
 );
 router.post(
   "/batchbooking/",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   bookingController.createBatchBooking
 );
 router.put(
   "/booking/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   bookingController.updateBookingById
 );
 router.delete(
   "/booking/:id",
-  userController.protectSuperadmin,
+  userController.protectAdmin,
   bookingController.deleteBookingById
 );
 module.exports = router;

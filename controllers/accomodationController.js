@@ -66,13 +66,8 @@ exports.createAccomodation = async (req, res, next) => {
 exports.updateAccomodationById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const {
-      price,
-      accomodationImg,
-      roomId,
-      status,
-      accomodationLocation,
-    } = req.body;
+    const { price, accomodationImg, roomId, status, accomodationLocation } =
+      req.body;
     const accomodation = await Accomodation.findOne({ where: { id } });
     if (!accomodation)
       return res.status(400).json({ message: "Accomodation not found." });
@@ -148,7 +143,7 @@ exports.getValidAccomodationByInOutDate = async (req, res, next) => {
     console.log(dateArrayForSearch);
 
     const accomodations = await Accomodation.findAll({ attributes: ["id"] });
-    console.log(JSON.parse(JSON.stringify(accomodations)));
+    // console.log(JSON.parse(JSON.stringify(accomodations)));
 
     const accomodationArray = accomodations.map((item) => item.id);
     console.log(accomodationArray);
@@ -161,17 +156,28 @@ exports.getValidAccomodationByInOutDate = async (req, res, next) => {
       const accomodationUse = bookingItems.map((item) => item.accomodationId);
       console.log(accomodationUse);
       const validAccomodationId = arr_diff(accomodationUse, accomodationArray);
-      const validAccomodationItems = await Accomodation.findAll({
+      const validAccItems = await Accomodation.findAll({
         where: { id: validAccomodationId },
       });
+      const validAccomodationItems = JSON.parse(JSON.stringify(validAccItems));
+      console.log("valid", validAccomodationItems);
       let validAccomodation = {};
       validAccomodation.date = date;
       validAccomodation.validAccomodationItems = validAccomodationItems;
       validAccomodationByDate.push(validAccomodation);
     }
-    // console.log(JSON.parse(JSON.stringify(validBookingItem)));
+    console.log("validacc", validAccomodationByDate);
+    const getBookingItems = [];
+    for (item of validAccomodationByDate) {
+      console.log("item", item);
+      const getBookingItem = item.validAccomodationItems.map((acc) => ({
+        ...acc,
+        dateUse: item.date,
+      }));
+      getBookingItems.push({ date: item.date, getBookingItem });
+    }
 
-    res.status(200).json({ validAccomodationByDate });
+    res.status(200).json({ getBookingItems });
 
     // const accomodationUse = [
     //   ...new Set(bookingItemUse.map((item) => item.accomodationId)),

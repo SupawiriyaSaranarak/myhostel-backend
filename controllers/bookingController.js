@@ -4,28 +4,29 @@ const nodemailer = require("nodemailer");
 
 exports.getAllBooking = async (req, res, next) => {
   try {
-    // if (req.user.userStatus !== "SUPERADMIN") {
-    // const booking = await Booking.findAll({
-    //   include: {
-    //     model: BookingItem,
-    //     include: Accomodation,
-    //   },
+    if (req.user.userStatus !== "SUPERADMIN") {
+      const booking = await Booking.findAll({
+        where: { userId: req.user.id },
+        include: {
+          model: BookingItem,
+          include: Accomodation,
+        },
 
-    //   attributes: [
-    //     "id",
-    //     "checkinDate",
-    //     "checkoutDate",
-    //     "paymentMethod",
-    //     "paymentStatus",
-    //     "bookingStatus",
-    //     "userId",
-    //     "clientEmail",
-    //     "createdAt",
-    //   ],
-    //   order: [["createdAt", "desc"]],
-    // });
-    // res.status(200).json({ booking });
-    // }
+        attributes: [
+          "id",
+          "checkinDate",
+          "checkoutDate",
+          "paymentMethod",
+          "paymentStatus",
+          "bookingStatus",
+          "userId",
+          "clientEmail",
+          "createdAt",
+        ],
+        order: [["createdAt", "desc"]],
+      });
+      res.status(200).json({ booking });
+    }
     const booking = await Booking.findAll({
       include: {
         model: BookingItem,
@@ -42,30 +43,30 @@ exports.getBookingById = async (req, res, next) => {
   try {
     const { id } = req.params;
     console.log(id);
-    // if (req.user.userStatus !== "SUPERADMIN") {
-    //   const booking = await Booking.findOne({
-    //     where: { id },
-    //     include: {
-    //       model: BookingItem,
-    //       include: Accomodation,
-    //     },
-    //     attributes: [
-    //       "id",
-    //       "checkinDate",
-    //       "checkoutDate",
-    //       "paymentMethod",
-    //       "paymentStatus",
-    //       "bookingStatus",
-    //       "userId",
-    //       "clientEmail",
-    //       "createdAt",
-    //     ],
-    //     order: [["createdAt", "desc"]],
-    //   });
-    //   if (!booking)
-    //     return res.status(400).json({ message: "Booking not found." });
-    //   return res.status(200).json({ booking });
-    // }
+    if (req.user.userStatus !== "SUPERADMIN") {
+      const booking = await Booking.findOne({
+        where: { id },
+        include: {
+          model: BookingItem,
+          include: Accomodation,
+        },
+        attributes: [
+          "id",
+          "checkinDate",
+          "checkoutDate",
+          "paymentMethod",
+          "paymentStatus",
+          "bookingStatus",
+          "userId",
+          "clientEmail",
+          "createdAt",
+        ],
+        order: [["createdAt", "desc"]],
+      });
+      if (!booking)
+        return res.status(400).json({ message: "Booking not found." });
+      return res.status(200).json({ booking });
+    }
     const booking = await Booking.findAll({
       where: { id },
       include: {
@@ -83,9 +84,8 @@ exports.getBookingById = async (req, res, next) => {
 exports.createBooking = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    // const { id } = req.user;
-    // id deme
-    const id = 1;
+    const { id } = req.user;
+
     const {
       clientEmail,
       checkinDate,
@@ -99,7 +99,8 @@ exports.createBooking = async (req, res, next) => {
       accomodationId,
     } = req.body;
     console.log(checkinDate, checkoutDate, accomodationId);
-    const regexEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const regexEmail =
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     const isEmail = regexEmail.test(String(clientEmail).toLowerCase());
     if (!clientEmail)
       return res.status(400).json({ message: "Client's email is require." });
@@ -219,20 +220,25 @@ exports.updateBookingById = async (req, res, next) => {
     const { id } = req.params;
     const {
       clientEmail,
+      price,
+      paymentAmount,
       paymentMethod,
       paymentImg,
       paymentStatus,
       bookingStatus,
     } = req.body;
-    const regexEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const regexEmail =
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     const isEmail = regexEmail.test(String(clientEmail).toLowerCase());
     if (clientEmail && !isEmail)
       return res.status(400).json({ message: "This is not an email." });
     const booking = await Booking.findOne({ where: { id } });
+
     if (req.user.id !== booking.userId || req.user.userStatus !== "SUPERADMIN")
       return res.status(400).json({
         message: "You are unauthorized to update other booking.",
       });
+    console.log("booking", booking);
     if (booking.bookingStatus === "CONFIRM")
       return res.status(400).json({
         message:
@@ -253,6 +259,20 @@ exports.updateBookingById = async (req, res, next) => {
     booking.bookingStatus = bookingStatus
       ? bookingStatus
       : booking.bookingStatus;
+    booking.price = price ? price : booking.price;
+    booking.paymentAmount = paymentAmount
+      ? paymentAmount
+      : booking.paymentAmount;
+    booking.paymentImg = paymentImg ? paymentImg : booking.paymentImg;
+    if (price && paymentAmount) {
+      booking.discount = (price - paymentAmount) / price;
+    } else if (!price && paymentAmount) {
+      booking.discount = (booking.price - paymentAmount) / booking.price;
+    } else if (price && !paymentAmount) {
+      return res.status(400).json({
+        message: "Payment Amount is require, please see in the payment slip.",
+      });
+    }
     if (
       (!booking.paymentImg ||
         !booking.paymentMethod ||
@@ -380,9 +400,21 @@ exports.updateAndSendNewVerifyCode = async (req, res, next) => {
 exports.deleteBookingById = async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (req.user.userStatus === "SUPERADMIN") {
+      const booking = await Booking.findOne({ where: { id } });
+      if (!booking)
+        return res.status(400).json({ message: `Booking not found.` });
+      await booking.destroy();
+      res.status(204).json({ message: `Booking has been deleted.` });
+    }
+
     const booking = await Booking.findOne({ where: { id } });
     if (!booking)
       return res.status(400).json({ message: `Booking not found.` });
+    if (booking.userId !== req.user.userId)
+      return res
+        .status(400)
+        .json({ message: `You cannot delete other's booking.` });
     await booking.destroy();
     res.status(204).json({ message: `Booking has been deleted.` });
   } catch (err) {
@@ -393,7 +425,8 @@ exports.deleteBookingById = async (req, res, next) => {
 exports.createBatchBooking = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    const { id } = req.user;
+    // const { id } = req.user;
+    const id = 1;
     const {
       clientEmail,
       checkinDate,
@@ -406,7 +439,8 @@ exports.createBatchBooking = async (req, res, next) => {
       discount,
       accomodationId,
     } = req.body;
-    const regexEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const regexEmail =
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     const isEmail = regexEmail.test(String(clientEmail).toLowerCase());
     if (!clientEmail)
       return res.status(400).json({ message: "Client's email is require." });
@@ -442,10 +476,13 @@ exports.createBatchBooking = async (req, res, next) => {
         dateArrayForCheckin[dateArrayForCheckin.length - 1].getTime() + 86400000
       );
       dateArrayForCheckin.push(x);
+      console.log("x", x);
     }
-
+    console.log("accomodationId", accomodationId.accomodationId);
     const x = accomodationId.map((item) => item.dateUse);
     const reserveDate = [...new Set(x)];
+    console.log(reserveDate);
+    console.log(dateArrayForCheckin);
 
     if (reserveDate.length !== dateArrayForCheckin.length)
       return res.status(400).json({

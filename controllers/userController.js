@@ -44,7 +44,7 @@ exports.protectAdmin = async (req, res, next) => {
     const user = await User.findOne({ where: { id: payload.id } });
     console.log(user);
     if (!user) return res.status(400).json({ message: `User not found.` });
-    if (user.userStatus !== "ADMIN")
+    if (user.userStatus !== "ADMIN" && user.userStatus !== "SUPERADMIN")
       return res.status(400).json({ message: `You are unauthorized.` });
     req.user = user;
     next();
@@ -55,47 +55,42 @@ exports.protectAdmin = async (req, res, next) => {
 
 //
 
-exports.protectSuperadmin = async (req, res, next) => {
-  try {
-    let token = null;
+// exports.protectSuperadmin = async (req, res, next) => {
+//   try {
+//     let token = null;
 
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    )
-      token = req.headers.authorization.split(" ")[1];
+//     if (
+//       req.headers.authorization &&
+//       req.headers.authorization.startsWith("Bearer")
+//     )
+//       token = req.headers.authorization.split(" ")[1];
 
-    if (!token)
-      return res.status(400).json({ message: `You are unauthorized.` });
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ where: { id: payload.id } });
+//     if (!token)
+//       return res.status(400).json({ message: `You are unauthorized.` });
+//     const payload = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findOne({ where: { id: payload.id } });
 
-    if (!user) return res.status(400).json({ message: `User not found.` });
-    if (user.userStatus !== "SUPERADMIN")
-      return res.status(400).json({ message: `You are unauthorized.` });
-    req.user = user;
-    next();
-  } catch (err) {
-    next(err);
-  }
-};
+//     if (!user) return res.status(400).json({ message: `User not found.` });
+//     if (user.userStatus !== "SUPERADMIN")
+//       return res.status(400).json({ message: `You are unauthorized.` });
+//     req.user = user;
+//     next();
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 exports.register = async (req, res, next) => {
-  const transaction = await sequelize.transaction();
   console.log(req.body);
   try {
-    const {
-      email,
-      password,
-      confirmPassword,
-      firstName,
-      lastName,
-      phone,
-    } = req.body;
+    const { email, password, confirmPassword, firstName, lastName, phone } =
+      req.body;
     if (password !== confirmPassword)
       return res.status(400).json({ message: "Password is not match" });
-    const regexEmail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const regexEmail =
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     const regexPassword = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$/;
-    const regexPhone = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
+    const regexPhone =
+      /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
     const isEmail = regexEmail.test(String(email).toLowerCase());
     const isPassword = regexPassword.test(String(password));
     console.log(isPassword);
@@ -117,6 +112,16 @@ exports.register = async (req, res, next) => {
       password,
       +process.env.BCRYPT_SALT
     );
+    const prevUser = await User.findAll({ where: { email } });
+    if (prevUser.length)
+      return res
+        .status(400)
+        .json({ message: "This email has been registered." });
+    const prevUser1 = await User.findAll({ where: { firstName, lastName } });
+    if (prevUser1.length)
+      return res
+        .status(400)
+        .json({ message: "This name has been registered." });
 
     const user = await User.create({
       email,
@@ -126,20 +131,19 @@ exports.register = async (req, res, next) => {
       phone,
     });
 
-    // const payload = {
-    //   id: user.id,
-    //   email: user.email,
-    //   firstName: user.firstName,
-    //   lastName: user.lastName,
-    //   status: "USER",
-    // };
-    // const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    //   expiresIn: +process.env.JWT_EXPIRES_IN,
-    // });
-    await transaction.commit();
-    res.status(201).json({ message: "User is created." });
+    const payload = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      userStatus: user.userStatus,
+    };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: +process.env.JWT_EXPIRES_IN,
+    });
+
+    res.status(201).json({ token });
   } catch (err) {
-    await transaction.rollback();
     next(err);
   }
 };
@@ -162,7 +166,7 @@ exports.login = async (req, res, next) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      status: user.status,
+      userStatus: user.userStatus,
     };
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: +process.env.JWT_EXPIRES_IN,
